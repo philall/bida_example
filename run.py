@@ -1,4 +1,3 @@
-
 ## packages to be imported:
 import os
 os.chdir('C:\\Users\\Jack\\source\\repos\\bida_example')
@@ -45,8 +44,7 @@ plt.show()
 
 ## normalize
 x_df = df.drop(['Type'], axis=1)
-x_df_norm = (x_df-x_df.mean()) / x_df.std()
-##df_norm = normalize(df, 'Type')
+df_norm = normalize(df, 'Type')
 df_norm_by_type = df_norm.groupby('Type')
 df_norm_means = df_norm_by_type.mean()
 df_norm_means.plot(kind='bar')
@@ -83,68 +81,61 @@ map= pd.DataFrame(pca.components_,columns=list(x_df.columns))
 sns.heatmap(map,cmap='RdBu')
 plt.show()
 
-## test and train (+ noise, + normalize)
-df_norm = x_df_norm
-df_noise = noise(df, 'Type', mu=0, sigma=0.0001)
-
-df_norm['Type'] = df['Type']
-
-train, test = split_data(df, predictand='Type', test_share=0.20)
-y_train = train.Type
-y_test = test.Type
-x_train = train[train.columns.difference(['Type'])]
-x_test = test[test.columns.difference(['Type'])]
-
-
-
-## add noise
-df_noise = noise(df, 'Type', mu=0, sigma=0.0001)
-
-train, test = split_data(df_noise, predictand='Type', test_share=0.20)
-y_train = train.Type
-y_test = test.Type
-x_train = train[train.columns.difference(['Type'])]
-x_test = test[test.columns.difference(['Type'])]
+results = pd.DataFrame()
+runs = 20
+for run in range(1, runs):
+    ## prepare test and train
+    train, test = split_data_random(df_norm, predictand='Type', test_share=0.20)
+    y_train = train.Type
+    y_test = test.Type
+    x_train = train[train.columns.difference(['Type'])]
+    x_test = test[test.columns.difference(['Type'])]
+    
+    ## create multinomial reg model
+    lr = lm.LogisticRegression(multi_class='multinomial', solver='newton-cg')
+    lr.fit(x_train, y_train)
+    res = lr.predict(x_test)
 
 
-## create multinomial reg model
-## with differebnt ditributions
-lr_noise = lm.LogisticRegression(multi_class='multinomial', solver='newton-cg')
-lr_noise.fit(x_train, y_train)
-
-res = lr_noise.predict(x_test)
-
-
-## create ann
-## https://scikit-learn.org/stable/modules/neural_networks_supervised.html#classification
-
-y = list(df_norm['Type'])
-X = [list(n) for index,n in x_df_norm.iterrows()]
-
-clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(7, 2), random_state=1)
-clf.fit(X, y)
-
-X_test = [list(n) for index,n in x_test.iterrows()]
-
-res = clf.predict(X_test)
+    ## add noise
+    train_noise = noise(train, 'Type', mu=0, sigma=0.1)
+    x_train_noise = train_noise[train_noise.columns.difference(['Type'])]
+    
+    lr_noise = lm.LogisticRegression(multi_class='multinomial', solver='newton-cg')
+    lr_noise.fit(x_train_noise, y_train)
+    res_noise = lr_noise.predict(x_test)
 
 
-## eval model
+    ## create ann
+    ## https://scikit-learn.org/stable/modules/neural_networks_supervised.html#classification
+    y = list(y_train)
+    X = [list(n) for index,n in x_train.iterrows()]
+    clf = MLPClassifier(solver='lbfgs', max_iter=1000, alpha=1e-5, verbose=10, hidden_layer_sizes=(20, 3), random_state=1)
+    clf.fit(X, y)
+    X_test = [list(n) for index,n in x_test.iterrows()]
+    res_clf = clf.predict(X_test)
 
-    ## numbers
-    ## graphs
+
+    run_eval = pd.DataFrame({'LR': sum(y_test == res)/y_test.shape[0], 'LR_ns': sum(y_test == res_noise)/y_test.shape[0], 'CLF': sum(y_test == res_clf)/y_test.shape[0]}, index=[run])
+
+    results = results.append([run_eval])
 
 
-eval = pd.DataFrame({'obs': y_test, 'pred': res})
 
-eval['truth'] = eval.obs == eval.pred
-eval['measured'] = True
-sum(eval['truth'])/sum(eval['measured'])
+results_upv = pd.melt(results, value_vars=['CLF', 'LR', 'LR_ns'])
 
-eval_cat = eval.groupby(['obs']).sum()
-eval_cat['acc'] = eval_cat['truth']/eval_cat['measured']
-eval_cat['obs'] = eval_cat.index
+medians = results_upv.groupby(['variable'])['value'].median()
+vertical_offset = 0.01
+
 
 sns.set()
-sns.barplot(x='obs',y='acc', data=eval_cat)
+box_plot = sns.boxplot(x="variable", y="value", data=results_upv)
+
+for xtick in box_plot.get_xticks():
+    box_plot.text(xtick, round(medians[xtick],3),round(medians[xtick],3), 
+            horizontalalignment='center',color='w')
+    
+plt.ylim(0, 1)
+plt.ylabel('Score')
+plt.xlabel('Model')
 plt.show()
