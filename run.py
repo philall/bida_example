@@ -134,11 +134,11 @@ X_test = [list(n) for index,n in x_test.iterrows()]
 res_clf = clf.predict(X_test)
 
 
-### set temporary results row
-#run_eval = pd.DataFrame({'LR': sum(y_test == res)/y_test.shape[0],
-#                         'LR_ns': sum(y_test == res_noise)/y_test.shape[0],
-#                         'CLF': sum(y_test == res_clf)/y_test.shape[0]},
-#                        index=[run])
+## set temporary results row
+run_eval = pd.DataFrame({'LR': sum(y_test == res)/y_test.shape[0],
+                         'LR_ns': sum(y_test == res_noise)/y_test.shape[0],
+                         'CLF': sum(y_test == res_clf)/y_test.shape[0]},
+                        index=[run])
 
 ### append to main results dataframe
 #results = results.append([run_eval])
