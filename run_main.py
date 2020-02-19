@@ -1,6 +1,5 @@
 ## packages to be imported:
 import os
-os.chdir('C:\\Users\\Jack\\source\\repos\\bida_example')
 
 import pandas as pd
 import numpy as np
@@ -14,7 +13,7 @@ from sklearn.neural_network import MLPClassifier
 # own modules
 from functions.splitter import *
 from functions.math import *
-
+from functions.data_source import get_project_dir, get_data_source
 
 
 def lr_mod(x_train, y_train, x_test, y_test):
@@ -42,7 +41,8 @@ def clf_mod(x_train, y_train, x_test, y_test):
 
 
 if __name__ == '__main__':
-    infile = '.\\data\\glass.csv'
+    project_dir = get_project_dir(__file__)
+    infile = get_data_source(project_dir)
     df = pd.read_csv(infile, sep=',')
 
     df['Type']=(df['Type']+64).apply(chr)
@@ -94,5 +94,5 @@ if __name__ == '__main__':
     plt.xlabel('Model')
     plt.show()
 
-
-    results.to_csv('.\\data\\out.csv')
+    out_file = get_data_source(path=project_dir, file='out.csv')
+    results.to_csv(out_file)
