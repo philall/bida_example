@@ -94,3 +94,5 @@ if __name__ == '__main__':
     plt.xlabel('Model')
     plt.show()
 
+
+    results.to_csv('.\\data\\out.csv')
