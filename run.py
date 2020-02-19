@@ -1,7 +1,8 @@
 ## packages to be imported:
 
 import os # os interface
-os.chdir('C:\\Users\\Jack\\source\\repos\\bida_example')    # strings notation either '' or ""
+# xxx: see data source helper
+# os.chdir('C:\\Users\\Jack\\source\\repos\\bida_example')  # strings notation either '' or ""
 
 import pandas as pd                                         # 'as' defines an alias for a package
 import numpy as np
@@ -16,12 +17,14 @@ from sklearn.decomposition import PCA
 ## own modules
 from functions.splitter import *                            # with '*' all modules are directly imported
 from functions.math import *
+from functions.data_source import get_project_dir, get_data_source
 
 
 
 ## import dataset using pandas 
+project_base = get_project_dir(__file__)
 
-infile = '.\\data\\glass.csv'                               # variables are implicitly allocated!
+infile = get_data_source(project_base)                      # variables are implicitly allocated!
 df = pd.read_csv(infile, sep=',')                           # 'pd' is the alias for pandas. / pandas allows many easy possibilities of importing various data sources
 df                                                          # df is of type dataframe (similar to R)
 df.head()                                                   # '.function()' implies a funciton working on the object itself
