@@ -42,6 +42,7 @@ def clf_mod(x_train, y_train, x_test, y_test):
 
 if __name__ == '__main__':
     project_dir = get_project_dir(__file__)
+    import pdb; pdb.set_trace()
     infile = get_data_source(project_dir)
     df = pd.read_csv(infile, sep=',')
 
@@ -94,5 +95,5 @@ if __name__ == '__main__':
     plt.xlabel('Model')
     plt.show()
 
-    out_file = get_data_source(path=project_dir, file='out.csv')
+    out_file = get_data_source(path=project_dir, file_name='out.csv')
     results.to_csv(out_file)
